@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f2f1ef8322dbdc40812c4f1b65e5b7f, type: 3}
+  m_Name: Data_Player
+  m_EditorClassIdentifier: Assembly-CSharp::UnitData
+  unitName: PLayer
+  maxHP: 100
+  maxMP: 100
+  attack: 20
+  defense: 10
+  abilities:
+  - {fileID: 11400000, guid: 6b52537106e2f8c44aed3c2bc9bfd348, type: 2}
+  - {fileID: 11400000, guid: 753fa3acdf9f5b64f97f87a5d0c2e229, type: 2}

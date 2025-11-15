@@ -26,21 +26,10 @@ public class AbilityButton : MonoBehaviour
     // Función que se ejecuta cuando se hace clic en el botón
     public void OnClickAction()
     {
-        // 1. Verificar si los datos son válidos
-        if (abilityData == null)
-        {
-            Debug.LogError("¡El botón no tiene datos de habilidad asignados!");
-            return;
-        }
-        
-        // 2. Verificar si el BattleManager existe
-        if (BattleManager.Instance == null)
-        {
-            Debug.LogError("BattleManager no encontrado. ¿Está en la escena?");
-            return;
-        }
+        // Verifica que los datos de la habilidad y el BattleManager existan
+        if (abilityData == null || BattleManager.Instance == null) return;
 
-        // 3. Llamar a la función ExecuteAbility con los datos
+        // Llamar a la función ExecuteAbility con los datos
         BattleManager.Instance.ExecuteAbility(abilityData);
     }
 

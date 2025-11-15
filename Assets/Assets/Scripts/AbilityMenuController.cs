@@ -1,5 +1,6 @@
 // AbilityMenuController.cs
 using UnityEngine;
+using TMPro;
 
 public class AbilityMenuController : MonoBehaviour
 {
@@ -8,9 +9,6 @@ public class AbilityMenuController : MonoBehaviour
 
     // El transform padre donde se crearán los botones (generalmente este GameObject)
     public Transform buttonsParent; 
-
-    // Referencia al BattleManager para obtener la unidad del jugador
-    public BattleManager battleManager;
 
     void Start()
     {
@@ -22,32 +20,29 @@ public class AbilityMenuController : MonoBehaviour
     }
 
     // Función principal llamada por el BattleManager
-    public void DisplayAbilities(Unit playerUnit)
+    public void DisplayAbilities(Unit activeUnit)
     {
         // 1. Limpiar los botones antiguos (si los hay)
         ClearButtons();
 
-        // 2. Obtener las habilidades del jugador
-        Ability[] playerAbilities = playerUnit.baseStats.abilities;
-        
-        if (playerAbilities == null || playerAbilities.Length == 0)
+        // 2. Obtener las habilidades del jugador        
+        if (activeUnit.baseStats.abilities == null || activeUnit.baseStats.abilities.Length == 0)
         {
             Debug.LogError("La unidad del jugador no tiene habilidades asignadas en UnitData.");
             return;
         }
 
         // 3. Crear un botón para cada habilidad
-        foreach (Ability ability in playerAbilities)
+        foreach (Ability ability in activeUnit.baseStats.abilities)
         {
             GameObject buttonObject = Instantiate(abilityButtonPrefab, buttonsParent);
             
             // 4. Asignar los datos al script del botón
-            AbilityButton buttonScript = buttonObject.GetComponent<AbilityButton>();
+            AbilityButton abilityButton = buttonObject.GetComponent<AbilityButton>();
             
-            if (buttonScript != null)
+            if (abilityButton != null)
             {
-                // **ESTA LÍNEA ES CLAVE:** Le pasa la DATA al botón
-                buttonScript.abilityData = ability;
+                abilityButton.abilityData = ability;
             }
         }
     }

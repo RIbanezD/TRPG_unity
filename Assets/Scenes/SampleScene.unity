@@ -487,7 +487,7 @@ GameObject:
   - component: {fileID: 805774013}
   - component: {fileID: 805774012}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: BattleManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -506,10 +506,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BattleManager
   abilityMenuController: {fileID: 871719862}
-  allUnits: []
+  currentActiveUnit: {fileID: 917419999}
+  playerUnits:
+  - {fileID: 917419999}
+  enemyUnits:
+  - {fileID: 2053190901}
   playerActionPanel: {fileID: 871719858}
-  playerUnit: {fileID: 917419999}
-  enemyUnit: {fileID: 2053190901}
 --- !u!4 &805774013
 Transform:
   m_ObjectHideFlags: 0
@@ -616,7 +618,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AbilityMenuController
   abilityButtonPrefab: {fileID: 5572827717869849304, guid: aa3b221256c39ad43b0843c17a200fde, type: 3}
   buttonsParent: {fileID: 871719859}
-  battleManager: {fileID: 805774012}
 --- !u!114 &871719863
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -761,7 +762,7 @@ GameObject:
   - component: {fileID: 917420000}
   - component: {fileID: 917419999}
   m_Layer: 0
-  m_Name: Square
+  m_Name: PlayerUnit
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -779,27 +780,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1319ce2af113c3d498c9fb2ddcdf634e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  baseStats:
-    unitName: Player
-    maxHP: 100
-    maxMP: 50
-    attack: 15
-    defense: 5
-    abilities:
-    - abilityName: Atk
-      description: Normal atk
-      mpCost: 0
-      power: 0
-      type: 0
-      target: 0
-    - abilityName: Heal
-      description: Heals
-      mpCost: 20
-      power: 10
-      type: 1
-      target: 2
+  baseStats: {fileID: 11400000, guid: 4807de7a81ee6a64c80490ae9ed246d6, type: 2}
   hpText: {fileID: 1774663092}
   mpText: {fileID: 456869662}
+  skipTurn: 0
+  activeEffects: []
 --- !u!212 &917420000
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -1236,7 +1221,7 @@ GameObject:
   - component: {fileID: 2053190899}
   - component: {fileID: 2053190901}
   m_Layer: 0
-  m_Name: Circle
+  m_Name: EnemyUnit
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1327,15 +1312,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1319ce2af113c3d498c9fb2ddcdf634e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Unit
-  baseStats:
-    unitName: Enemy
-    maxHP: 30
-    maxMP: 10
-    attack: 10
-    defense: 5
-    abilities: []
+  baseStats: {fileID: 11400000, guid: 9e96cc1c46c9b0243a0bfc1a20ea3d3b, type: 2}
   hpText: {fileID: 1863412980}
   mpText: {fileID: 2117238092}
+  skipTurn: 0
+  activeEffects: []
 --- !u!1 &2117238090
 GameObject:
   m_ObjectHideFlags: 0
