@@ -1,0 +1,64 @@
+// AbilityMenuController.cs
+using UnityEngine;
+
+public class AbilityMenuController : MonoBehaviour
+{
+    // El Prefab del botón que instanciarás
+    public GameObject abilityButtonPrefab; 
+
+    // El transform padre donde se crearán los botones (generalmente este GameObject)
+    public Transform buttonsParent; 
+
+    // Referencia al BattleManager para obtener la unidad del jugador
+    public BattleManager battleManager;
+
+    void Start()
+    {
+        // Asignar el padre si no está asignado en el Inspector (para mayor seguridad)
+        if (buttonsParent == null)
+        {
+            buttonsParent = transform;
+        }
+    }
+
+    // Función principal llamada por el BattleManager
+    public void DisplayAbilities(Unit playerUnit)
+    {
+        // 1. Limpiar los botones antiguos (si los hay)
+        ClearButtons();
+
+        // 2. Obtener las habilidades del jugador
+        Ability[] playerAbilities = playerUnit.baseStats.abilities;
+        
+        if (playerAbilities == null || playerAbilities.Length == 0)
+        {
+            Debug.LogError("La unidad del jugador no tiene habilidades asignadas en UnitData.");
+            return;
+        }
+
+        // 3. Crear un botón para cada habilidad
+        foreach (Ability ability in playerAbilities)
+        {
+            GameObject buttonObject = Instantiate(abilityButtonPrefab, buttonsParent);
+            
+            // 4. Asignar los datos al script del botón
+            AbilityButton buttonScript = buttonObject.GetComponent<AbilityButton>();
+            
+            if (buttonScript != null)
+            {
+                // **ESTA LÍNEA ES CLAVE:** Le pasa la DATA al botón
+                buttonScript.abilityData = ability;
+            }
+        }
+    }
+
+    // Limpia los botones generados dinámicamente
+    private void ClearButtons()
+    {
+        // Elimina todos los hijos del panel (todos los botones)
+        foreach (Transform child in buttonsParent)
+        {
+            Destroy(child.gameObject);
+        }
+    }
+}
