@@ -1,6 +1,7 @@
 // BattleManager.cs
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 
 public class BattleManager : MonoBehaviour
 {
@@ -10,19 +11,19 @@ public class BattleManager : MonoBehaviour
     // Referencia al controlador de UI para generar botones dinámicamente
     public AbilityMenuController abilityMenuController;
 
+    // Rastrea la unidad cuyo turno es actual
+    public Unit currentActiveUnit;
+
     // Cantidad de MP a regenerar cada turno
     private const int MP_REGEN_AMOUNT = 5;
 
-    // Lista de todas las unidades en la batalla
-    public List<Unit> allUnits = new List<Unit>();
+    // NUEVAS LISTAS para el control de la batalla (permite múltiples unidades)
+    public List<Unit> playerUnits = new List<Unit>();
+    public List<Unit> enemyUnits = new List<Unit>();
 
     // Referencia al Panel de UI que contiene los botones de acción del jugador
     public GameObject playerActionPanel;
     private enum BattleState { Start, PlayerTurn, EnemyTurn, Victory, Defeat }
-    
-    // Unidades específicas para referencia fácil
-    public Unit playerUnit;
-    public Unit enemyUnit;
 
     private BattleState currentState;
 
@@ -42,17 +43,39 @@ public class BattleManager : MonoBehaviour
     void Start()
     {
         // Inicializar todas las unidades (asume que ya están asignadas en el Inspector)
-        playerUnit.Initialize();
-        enemyUnit.Initialize();
-        
-        currentState = BattleState.Start;
-        StartBattle();
+        InitializeUnits();
+
+        // TEMPORAL: Asignamos el primer jugador como unidad activa
+        if (playerUnits.Count > 0)
+        {
+            currentActiveUnit = playerUnits[0];
+        }
+            currentState = BattleState.Start;
+            StartBattle();
     }
 
     public void StartBattle()
     {
         Debug.Log("--- Batalla Iniciada ---");
         ChangeState(BattleState.PlayerTurn);
+    }
+
+    public void InitializeUnits()
+    {
+        // Inicializa todas las unidades del jugador
+        foreach (Unit unit in playerUnits)
+        {
+            unit.Initialize();
+        }
+
+        // Inicializa todas las unidades enemigas
+        foreach (Unit unit in enemyUnits)
+        {
+            unit.Initialize();
+        }
+
+        // Asigna el primer atacante (ej: la primera unidad de la lista)
+        // [Implementación más compleja de turnos requerida aquí]
     }
 
     // Función central para gestionar el flujo de la batalla
@@ -67,14 +90,40 @@ public class BattleManager : MonoBehaviour
         switch (newState)
         {
             case BattleState.PlayerTurn:
+
+                if (currentActiveUnit != null)
+                {
+                currentActiveUnit.ProcessStatusEffects(); 
+                
+                if (!currentActiveUnit.IsAlive())
+                {
+                    // Si murió por Veneno, el turno termina inmediatamente.
+                    ChangeState(BattleState.EnemyTurn); 
+                    return;
+                }
+                if (currentActiveUnit.skipTurn)
+                {
+                    // Si la unidad fue aturdida, saltamos el turno del jugador y vamos al enemigo.
+                    Debug.Log(currentActiveUnit.baseStats.unitName + " pierde el turno por aturdimiento.");
+                    ChangeState(BattleState.EnemyTurn);
+                    return;
+                }
+                }
+
                 // **TODO: Mostrar el menú de acción del jugador (UI)**
                 playerActionPanel?.SetActive(true);
 
-                abilityMenuController?.DisplayAbilities(playerUnit);
+                abilityMenuController?.DisplayAbilities(currentActiveUnit);
 
-                playerUnit.RegenerateMP(MP_REGEN_AMOUNT);
+                currentActiveUnit.RegenerateMP(MP_REGEN_AMOUNT);
                 break;
+
             case BattleState.EnemyTurn:
+                // TEMPORAL: Asumimos que el primer enemigo es el activo
+                if (enemyUnits.Count > 0)
+                {
+                enemyUnits[0].ProcessStatusEffects(); 
+                }
                 // El enemigo ataca automáticamente después de un pequeño retraso
                 Invoke("ExecuteEnemyTurn", 1f);
                 break;
@@ -104,51 +153,6 @@ public class BattleManager : MonoBehaviour
         // #endif
     }
 
-    // Deprecated - El jugador usa un Ataque Básico
-    /* public void OnPlayerAttack()
-    {
-
-        if (currentState != BattleState.PlayerTurn) return;
-
-        // Ejecuta la acción del jugador (Ataque)
-        enemyUnit.TakeDamage(playerUnit.baseStats.attack);
-
-        if (currentState == BattleState.Victory || currentState == BattleState.Defeat)
-        {
-            return; // Salir de la función si la batalla ya finalizó
-        }
-
-        // Pasa el turno al enemigo
-        ChangeState(BattleState.EnemyTurn);
-    }
- */
-    /* 
-    public void OnPlayerHeal()
-    {
-        if (currentState != BattleState.PlayerTurn) return;
-
-        if (playerUnit.TryConsumeMP(HEAL_COST))
-        {
-            // Si el MP se consume con éxito:
-            playerUnit.Heal(20);
-
-            // Pasa el turno al enemigo
-            ChangeState(BattleState.EnemyTurn);
-        }
-        else
-        {
-            // Si no hay suficiente MP, el turno NO pasa
-            Debug.Log("¡No hay suficiente MP!");
-        }
-
-        // Llama a la función de curación en el jugador
-        playerUnit.Heal(20); // Cura una cantidad fija (20 HP) por ahora
-
-        // Pasa el turno al enemigo
-        ChangeState(BattleState.EnemyTurn);
-    }
-    */
-
     public void OnPlayerAttack(Ability attackAbility) // Ahora requiere un argumento
     {
         ExecuteAbility(attackAbility);
@@ -162,37 +166,47 @@ public class BattleManager : MonoBehaviour
     public void ExecuteAbility(Ability selectedAbility)
     {
         if (currentState != BattleState.PlayerTurn) return;
-        
+
         // Verificar si tiene suficiente Maná
-        if (!playerUnit.TryConsumeMP(selectedAbility.mpCost))
+        if (!currentActiveUnit.TryConsumeMP(selectedAbility.mpCost))
         {
-            return; 
+            return;
         }
+        
 
         // Determinar el objetivo y ejecutar la lógica
         Unit targetUnit = null;
-        if (selectedAbility.target == TargetType.SingleEnemy)
+        Unit casterUnit = currentActiveUnit;
+
+        // **NOTA:** La lógica de objetivo debe ser expandida para múltiples unidades en el futuro.
+        if (selectedAbility.target == TargetType.SingleEnemy && enemyUnits.Count > 0)
         {
-            targetUnit = enemyUnit;
+            targetUnit = enemyUnits[0]; // TEMPORAL, siempre el primer enemigo
         }
         else if (selectedAbility.target == TargetType.Self || selectedAbility.target == TargetType.SingleAlly)
         {
-            targetUnit = playerUnit;
+            targetUnit = casterUnit; // TEMPORAL, siempre uno mismo
         }
 
         // Aplicar el efecto de la habilidad
         switch (selectedAbility.type)
         {
             case AbilityType.Damage:
-                int damage = playerUnit.baseStats.attack + selectedAbility.power;
+                int damage = casterUnit.CurrentAttack + selectedAbility.power;
                 targetUnit.TakeDamage(damage);
                 break;
             case AbilityType.Heal:
                 if (targetUnit.IsAlive())
-            {
+                {
                  // La curación es directa: no aplica defensa/ataque
                  targetUnit.Heal(selectedAbility.power); 
-            }
+                }
+                break;
+            case AbilityType.Buff:
+                if (selectedAbility.statusEffectData != null)
+                {
+                targetUnit.ApplyStatusEffect(selectedAbility.statusEffectData);
+                }
                 break;
         }
         
@@ -207,15 +221,33 @@ public class BattleManager : MonoBehaviour
 
         if (currentState != BattleState.EnemyTurn) return; // Si ya ganamos/perdimos, salir.
 
+        Unit enemyUnit = enemyUnits[0];
+        Unit playerUnit = playerUnits[0];
+
         if (!enemyUnit.IsAlive())
         {
             ChangeState(BattleState.Victory);
             return;
         }
 
+        // Verificar Salto de Turno del Enemigo**
+        if (enemyUnit.skipTurn)
+        {
+            Debug.Log(enemyUnit.baseStats.unitName + " perdió su turno por aturdimiento.");
+            ChangeState(BattleState.PlayerTurn);
+            return;
+        }
+
         // IA simple: El enemigo siempre ataca
-        Debug.Log(enemyUnit.baseStats.unitName + " ataca.");
-        playerUnit.TakeDamage(enemyUnit.baseStats.attack);
+        Ability enemyAttackAbility = enemyUnit.baseStats.abilities[0];
+        int damageAmount = enemyUnit.baseStats.attack + enemyAttackAbility.power;
+        Debug.Log(enemyUnit.baseStats.unitName + " ataca con " + enemyAttackAbility.abilityName + ".");
+        playerUnit.TakeDamage(damageAmount);
+
+        if (currentState == BattleState.Victory || currentState == BattleState.Defeat)
+        {
+            return;
+        }
 
         // Pasa el turno al jugador
         ChangeState(BattleState.PlayerTurn);
@@ -225,13 +257,11 @@ public class BattleManager : MonoBehaviour
     
     public void CheckBattleEnd()
     {
-        if (!playerUnit.IsAlive())
-        {
+        bool anyPlayerAlive = playerUnits.Any(p => p.IsAlive());
+        bool anyEnemyAlive = enemyUnits.Any(e => e.IsAlive());
+
+        if (!anyPlayerAlive) {
             ChangeState(BattleState.Defeat);
-        }
-        else if (!enemyUnit.IsAlive())
-        {
-            ChangeState(BattleState.Victory);
         }
     }
 }

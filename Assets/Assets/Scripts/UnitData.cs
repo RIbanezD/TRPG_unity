@@ -1,16 +1,18 @@
 // UnitData.cs
 using UnityEngine;
 
-// [System.Serializable] permite ver y editar esta clase en el Inspector de Unity
-[System.Serializable]
-public class UnitData
+[CreateAssetMenu(fileName = "NewUnit", menuName = "Battle/Unit Data")]
+public class UnitData : ScriptableObject
 {
-    // Las estadísticas mínimas para tu MVP
+    [Header("Info Básica")]
     public string unitName;
+    
+    [Header("Estadísticas")]
     public int maxHP;
     public int maxMP;
     public int attack;
     public int defense;
-
+    
+    [Header("Habilidades")]
     public Ability[] abilities;
 }
