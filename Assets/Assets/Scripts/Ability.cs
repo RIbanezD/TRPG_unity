@@ -22,7 +22,7 @@ public class Ability : ScriptableObject
     // Define a quién afecta (necesario para la UI posterior)
     public TargetType target; 
     
-    public IAbilityEffect effect;
+    //public IAbilityEffect effect;
 }
 
 // Enumeraciones para definir el tipo y el objetivo (útil para la IA y UI)
