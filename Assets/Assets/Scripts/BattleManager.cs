@@ -1,6 +1,7 @@
 // BattleManager.cs
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 
 public class BattleManager : MonoBehaviour
 {
@@ -256,13 +257,11 @@ public class BattleManager : MonoBehaviour
     
     public void CheckBattleEnd()
     {
-        if (!playerUnits[0].IsAlive())
-        {
+        bool anyPlayerAlive = playerUnits.Any(p => p.IsAlive());
+        bool anyEnemyAlive = enemyUnits.Any(e => e.IsAlive());
+
+        if (!anyPlayerAlive) {
             ChangeState(BattleState.Defeat);
-        }
-        else if (!enemyUnits[0].IsAlive())
-        {
-            ChangeState(BattleState.Victory);
         }
     }
 }
